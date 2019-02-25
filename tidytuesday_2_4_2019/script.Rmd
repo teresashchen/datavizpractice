@@ -1,0 +1,55 @@
+---
+title: "House Price Index & Mortgage Rates"
+author: "Teresa Chen"
+date: "2/4/2019"
+output: html_document
+---
+
+
+```{r setup, include = FALSE}
+
+library("tidyverse")
+library("rio")
+library("scales")
+knitr::opts_chunk$set(warning = FALSE,
+                      message = FALSE,
+                      error = TRUE
+                      )
+
+theme_set(theme_minimal(base_size = 18))
+```
+
+```{r importdata}
+
+state_hpi <- import("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-02-05/state_hpi.csv")
+mortgage_rates <- import("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-02-05/mortgage.csv")
+recession_dates <- import("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-02-05/recessions.csv")
+
+```
+
+```{r tidydata}
+
+skimr::skim(state_hpi)
+skimr::skim(mortgage_rates)
+
+tidymortgage <- mortgage_rates %>%
+  dplyr::select(date, fixed_rate_15_yr, fixed_rate_30_yr, adjustable_rate_5_1_hybrid) %>% 
+  gather(year, rate, 2:4) %>% 
+  mutate(date = as.Date(date))
+
+```
+
+```{r fig.width=40, fig.height= 10}
+
+tidymortgage %>% 
+  filter(date > lubridate::ymd("2018-01-01")) %>% 
+  ggplot(aes(x = date, y = year)) +
+    geom_tile(aes(fill = rate),
+              color = "white",
+              alpha = 0.5) +
+    scale_fill_viridis_c(option = "A") +
+    scale_x_date(breaks = date_breaks("years")) +
+    theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+    theme_minimal(base_size = 30)
+```
+

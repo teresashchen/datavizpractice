@@ -1,0 +1,150 @@
+---
+title: "Research_spending_2_12_2019"
+author: "Teresa Chen"
+date: "February 12, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(rio)
+library(paletteer)
+library(gghighlight)
+library(cowplot)
+
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r importdata}
+
+fed_rd <- readr::read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-02-12/fed_r_d_spending.csv")
+energy_spend <- readr::read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-02-12/energy_spending.csv")
+climate_spend <- readr::read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-02-12/climate_spending.csv")
+
+```
+
+```{r tidydata}
+
+abbname <- tibble(abb = c("DOD - Department of Defense",
+                      "NASA - National Aeronautics and Space Administration",
+                      "DOE - Department of Energy",
+                      "HHS - Department of Health and Human Services",
+                      "NIH - National Institute of Health",
+                      "NSF - National Science Foundation",
+                      "USDA - US Department of Agriculture",
+                      "Interior - Department of Interior",
+                      "DOT - Deparment of Transportation",
+                      "EPA - Environmental Protection Agency",
+                      "DOC - Department of Corrections",
+                      "DHS - Department of Homeland Security",
+                      "VA - Department of Veterands Affairs",
+                      "Other - other research and development spending")) %>% 
+  separate(abb, into = c("abb", "name"), sep = " - ")
+
+
+feddf <- left_join(fed_rd, abbname, by = c("department" = "abb"))
+
+feddf <- feddf %>% 
+  mutate(percent = rd_budget/gdp)
+
+# skimr::skim(fed_rd)
+
+```
+
+
+```{r plot1, fig.width = 25, fig.height = 10}
+
+
+#polt heatmap
+
+feddf %>% 
+  ggplot(aes(x = year, y = fct_reorder(name, percent))) +
+  geom_tile(aes(fill = percent*100),
+            color = "white",
+            alpha = 0.8) +
+  scale_fill_paletteer_c(scico, roma) +
+  coord_equal() +
+  scale_x_continuous(breaks = seq(1976, 2017, 5),
+                     expand = c(0, 0)) +
+  theme_minimal(base_size = 25) +
+  theme(panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        plot.title = element_text(hjust = 0.5,
+                                  vjust = 10,
+                                  face = "bold")) +
+  labs(fill = "",
+       x = "",
+       y = "",
+       title = "R&D funding as a percent of GDP",
+       caption = "American Association for the Advancement of Science")
+
+ggsave("plot0.png", width = 25, height = 10, dpi = 150, units = "in")
+```
+
+
+```{r plot2, fig.height = 15, fig.width = 15}
+
+# plot line graph with percentage
+
+plot1 <- feddf %>% 
+  ggplot(aes(x = year, y = percent, color = name)) +
+  geom_line(size = 2) +
+  scale_color_paletteer_d(ochRe, nolan_ned) +
+  scale_y_continuous(labels = scales::percent) +
+  scale_x_continuous(breaks = seq(1976, 2018, 5),
+                     expand = c(0, 0)) +
+  gghighlight(name == "National Institute of Health" |
+              name == "National Science Foundation" |
+              name == "Department of Health and Human Services" |
+              name == "Department of Defense",
+              use_group_by = FALSE,
+              use_direct_label = FALSE) +
+  theme_minimal(base_size = 18) +
+  labs(y = "% of GDP",
+       x = "Year",
+       color = "Department") +
+  theme(legend.justification = c(1, 0.1))
+
+
+# plot line graph with dollars
+plot2 <- feddf %>% 
+  ggplot(aes(x = year, y = rd_budget/1000000000, color = name)) +
+  geom_line(size = 2) +
+  scale_color_paletteer_d(ochRe, nolan_ned) +
+  scale_y_continuous(labels = scales::dollar) +
+  scale_x_continuous(breaks = seq(1976, 2018, 5),
+                     expand = c(0, 0)) +
+  gghighlight(name == "National Institute of Health" |
+              name == "National Science Foundation" |
+              name == "Department of Health and Human Services" |
+              name == "Department of Defense",
+              use_group_by = FALSE,
+              use_direct_label = FALSE) +
+  theme_minimal(base_size = 18) +
+  labs(y = "$USD (billions)",
+       x = "",
+       color = "Department") +
+  theme(legend.justification = c(1, 0.1))
+
+
+# comebine 2 line graphs
+
+
+plot3 <- plot_grid(plot2, plot1, labels = c("A", "B"), nrow = 2, align = "v")
+title <- ggdraw() + 
+  draw_label("R&D expenditure \nHighlight 4 agencies where biomechanists usually get grant from",
+             fontface = 'bold',
+             size = 20)
+
+plot3 <- plot_grid(title, plot3, ncol = 1, rel_heights = c(0.1, 1))
+
+save_plot("plot3.png", plot3,
+          ncol = 2, # we're saving a grid plot of 2 columns
+          nrow = 2, # and 2 rows
+          # each individual subplot should have an aspect ratio of 1.3
+          base_aspect_ratio = 1.3
+          )
+```
+
+
+
