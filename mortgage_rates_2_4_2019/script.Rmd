@@ -39,14 +39,14 @@ tidymortgage <- mortgage_rates %>%
 
 ```
 
-```{r fig.width=40, fig.height= 10}
+```{r fig.width=40, fig.height= 5}
 
 tidymortgage %>% 
   filter(date > lubridate::ymd("2018-01-01")) %>% 
   ggplot(aes(x = date, y = year)) +
     geom_tile(aes(fill = rate),
               color = "white",
-              alpha = 0.5) +
+              alpha = 0.8) +
     scale_fill_viridis_c(option = "A") +
     scale_x_date(breaks = date_breaks("years")) +
     theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
