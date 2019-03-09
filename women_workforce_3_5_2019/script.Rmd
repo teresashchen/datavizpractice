@@ -126,6 +126,7 @@ jobs_gender %>%
                 dot_guide = TRUE, dot_guide_size=0.25) +
   scale_x_continuous(labels = scales::percent_format(accuracy = 1),
                      breaks = c(0.5, 1, 1.5, 2, 2.5, 3)) +
+  geom_vline(xintercept = 1) +
   # theme_minimal(base_size = 17) +
   theme_ipsum_tw()+
   theme(panel.grid.minor = element_blank(),
