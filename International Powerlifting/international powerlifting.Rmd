@@ -1,0 +1,103 @@
+---
+title: "International Powerlifting"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+
+library(tidyverse)
+library(reactable)
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+# Data Importation
+
+```{r}
+
+ipf_lifts <- readr::read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-10-08/ipf_lifts.csv")
+
+head(ipf_lifts)
+```
+
+
+# Data Visualization
+
+## DD profile
+
+Distribution of body weight across all athletes
+
+```{r}
+
+
+ipf_lifts %>% 
+  # filter(place == "DD") %>% 
+  ggplot(aes(x = bodyweight_kg, fill = sex)) +
+  geom_density(alpha = 0.5) +
+  theme_minimal() +
+  colorblindr::scale_fill_OkabeIto() +
+  labs(title = "Distribution of Body Weight by Sex",
+       x = "Body Weight (kg)") +
+  theme(axis.title.y = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks.y = element_blank(),
+        plot.title = element_text(face = "bold"))
+
+```
+Distribution of age across all athletes
+
+```{r}
+
+ipf_lifts %>% 
+  # filter(place == "DD") %>% 
+  ggplot(aes(x = age, fill = sex)) +
+  geom_density(alpha = 0.5) +
+  theme_minimal() +
+  colorblindr::scale_fill_OkabeIto() +
+  labs(title = "Distribution of Age by Sex",
+       x = "Body Weight") +
+  theme(axis.title.y = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks.y = element_blank(),
+        plot.title = element_text(face = "bold"))
+
+```
+
+Profile of DD
+
+```{r}
+
+fig1 <- ipf_lifts %>% 
+  filter(place == "DD") %>% 
+  ggplot(aes(x = bodyweight_kg, y = age, color = sex)) +
+  geom_point(alpha = 0.5, size = 3) +
+  theme_classic() +
+  colorblindr::scale_color_OkabeIto() +
+  coord_flip() +
+  labs(x = "Body Weight",
+       y = "Age",
+       title = "Profile of Doping Disqualification \nduring International Powerlifting Federation Events") +
+  theme(axis.title = element_text(face = "bold"),
+        plot.title = element_text(face = "bold"))
+
+
+fig1 <- ggExtra::ggMarginal(fig1, groupFill = TRUE, groupColour = TRUE, alpha = 0.2)
+
+```
+
+
+```{r }
+grid::grid.newpage()
+grid::grid.draw(fig1)
+
+```
+
+
+## Save the plot
+
+Note. I noticed that ggsave did not work for saving the entire ggExtra object. Whey?
+
+```{r}
+ggsave("dd_profile.png", plot = last_plot(), dpi = 300)
+```
+
